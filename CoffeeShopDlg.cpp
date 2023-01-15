@@ -27,12 +27,14 @@ void CCoffeeShopDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COUNT_LIST, m_count_list);
+	DDX_Control(pDX, IDC_COUNT_SPIN, m_count_spin);
 }
 
 BEGIN_MESSAGE_MAP(CCoffeeShopDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_LBN_SELCHANGE(IDC_ITEM_LIST, &CCoffeeShopDlg::OnLbnSelchangeItemList)
+	ON_NOTIFY(UDN_DELTAPOS, IDC_COUNT_SPIN, &CCoffeeShopDlg::OnDeltaposCountSpin)
 END_MESSAGE_MAP()
 
 
@@ -68,6 +70,8 @@ BOOL CCoffeeShopDlg::OnInitDialog()
 		m_count_list.InsertString(i, L"0");
 	}
 
+	m_count_spin.GetWindowRect(&m_spin_rect);
+	ScreenToClient(&m_spin_rect);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -112,11 +116,16 @@ void CCoffeeShopDlg::CalcTotalPrice()
 {
 	int count = m_item_list.GetCount();
 	int total_price = 0;
+	CString str;
+
 	for (int i = 0; i < count; i++)
 	{
 		if (m_item_list.GetCheck(i))
 		{
-			total_price += m_item_list.GetItemData(i);
+			m_count_list.GetText(i, str);
+			int item_count = _wtoi(str);
+
+			total_price += m_item_list.GetItemData(i) * item_count;
 		}
 	}
 
@@ -132,8 +141,6 @@ void CCoffeeShopDlg::ChangeText(CListBox* ap_list_box, int a_index, const wchar_
 
 void CCoffeeShopDlg::OnLbnSelchangeItemList()
 {
-	CalcTotalPrice();
-
 	int index = m_item_list.GetCurSel();
 	
 	CString str;
@@ -148,4 +155,34 @@ void CCoffeeShopDlg::OnLbnSelchangeItemList()
 		if (item_count != 0) ChangeText(&m_count_list, index, L"0");		
 	}
 	m_count_list.SetCurSel(index);
+	m_count_spin.SetWindowPos(NULL, m_spin_rect.left, m_spin_rect.top + index * 24, 0, 0, SWP_NOSIZE);
+
+	CalcTotalPrice();
+}
+
+
+void CCoffeeShopDlg::OnDeltaposCountSpin(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+	
+	*pResult = 0;
+
+	int index = m_count_list.GetCurSel();
+	if (LB_ERR != index && m_item_list.GetCheck(index))
+	{
+		CString str;
+		m_count_list.GetText(index, str);
+		int item_count = _wtoi(str);		// L"0" -> 0
+
+		if (pNMUpDown->iDelta > 0) {
+			if(item_count > 1) item_count--;
+		}
+		else {
+			if(item_count < 100) item_count++;
+		}
+		str.Format(L"%d", item_count);		// 1 -> L"1"
+		ChangeText(&m_count_list, index, str);
+
+		CalcTotalPrice();
+	}
 }

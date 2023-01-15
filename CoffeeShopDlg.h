@@ -11,6 +11,7 @@ class CCoffeeShopDlg : public CDialogEx
 {
 private:
 	CCheckListBox m_item_list;
+	CRect m_spin_rect;
 
 // 생성입니다.
 public:
@@ -39,4 +40,6 @@ protected:
 public:
 	afx_msg void OnLbnSelchangeItemList();
 	CListBox m_count_list;
+	CSpinButtonCtrl m_count_spin;
+	afx_msg void OnDeltaposCountSpin(NMHDR* pNMHDR, LRESULT* pResult);
 };
