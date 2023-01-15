@@ -45,7 +45,22 @@ BOOL CCoffeeShopDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
-	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	wchar_t* p_item_name[MAX_ITEM_COUNT] =
+	{
+		L"아메리카노              1900원", L"카페라떼                 2500원",
+		L"카페모카                 2800원", L"카라멜마끼아또        3200원",
+		L"에스프레소              1800원", L"바닐라라떼              3500원",
+		L"카푸치노                 3300원", L"비엔나                    3500원",
+	};
+
+	m_item_list.SubclassDlgItem(IDC_ITEM_LIST, this);
+	m_item_list.SetItemHeight(0, 24);
+
+	for (int i = 0; i < MAX_ITEM_COUNT; i++)
+	{
+		m_item_list.InsertString(i, p_item_name[i]);
+	}
+
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }

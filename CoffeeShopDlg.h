@@ -4,10 +4,14 @@
 
 #pragma once
 
+#define MAX_ITEM_COUNT		8
 
 // CCoffeeShopDlg 대화 상자
 class CCoffeeShopDlg : public CDialogEx
 {
+private:
+	CCheckListBox m_item_list;
+
 // 생성입니다.
 public:
 	CCoffeeShopDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
