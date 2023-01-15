@@ -26,6 +26,7 @@ CCoffeeShopDlg::CCoffeeShopDlg(CWnd* pParent /*=nullptr*/)
 void CCoffeeShopDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_COUNT_LIST, m_count_list);
 }
 
 BEGIN_MESSAGE_MAP(CCoffeeShopDlg, CDialogEx)
@@ -58,11 +59,13 @@ BOOL CCoffeeShopDlg::OnInitDialog()
 
 	m_item_list.SubclassDlgItem(IDC_ITEM_LIST, this);
 	m_item_list.SetItemHeight(0, 24);
+	m_count_list.SetItemHeight(0, 24);
 
 	for (int i = 0; i < MAX_ITEM_COUNT; i++)
 	{
 		m_item_list.InsertString(i, p_item_name[i]);
 		m_item_list.SetItemData(i, price[i]);
+		m_count_list.InsertString(i, L"0");
 	}
 
 
@@ -105,9 +108,7 @@ HCURSOR CCoffeeShopDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-
-void CCoffeeShopDlg::OnLbnSelchangeItemList()
+void CCoffeeShopDlg::CalcTotalPrice()
 {
 	int count = m_item_list.GetCount();
 	int total_price = 0;
@@ -120,4 +121,31 @@ void CCoffeeShopDlg::OnLbnSelchangeItemList()
 	}
 
 	SetDlgItemInt(IDC_TOTAL_PRICE_EDIT, total_price);
+}
+
+void CCoffeeShopDlg::ChangeText(CListBox* ap_list_box, int a_index, const wchar_t* ap_string)
+{
+	ap_list_box->DeleteString(a_index);
+	ap_list_box->InsertString(a_index, ap_string);
+	ap_list_box->SetCurSel(a_index);
+}
+
+void CCoffeeShopDlg::OnLbnSelchangeItemList()
+{
+	CalcTotalPrice();
+
+	int index = m_item_list.GetCurSel();
+	
+	CString str;
+	m_count_list.GetText(index, str);
+
+	int item_count = _wtoi(str);	// L"0" -> 0  unicode to integer
+
+	if (m_item_list.GetCheck(index)) {
+		if (item_count == 0) ChangeText(&m_count_list, index, L"1");
+	} 
+	else {
+		if (item_count != 0) ChangeText(&m_count_list, index, L"0");		
+	}
+	m_count_list.SetCurSel(index);
 }
