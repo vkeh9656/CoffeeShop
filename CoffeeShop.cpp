@@ -43,4 +43,3 @@ BOOL CCoffeeShopApp::InitInstance()
 	dlg.DoModal();
 	return FALSE;
 }
-

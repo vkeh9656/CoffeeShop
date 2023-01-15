@@ -31,6 +31,7 @@ void CCoffeeShopDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCoffeeShopDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_LBN_SELCHANGE(IDC_ITEM_LIST, &CCoffeeShopDlg::OnLbnSelchangeItemList)
 END_MESSAGE_MAP()
 
 
@@ -53,12 +54,15 @@ BOOL CCoffeeShopDlg::OnInitDialog()
 		L"카푸치노                 3300원", L"비엔나                    3500원",
 	};
 
+	int price[MAX_ITEM_COUNT] = { 1900,2500,2800,3200,1800,3500,3300,3500 };
+
 	m_item_list.SubclassDlgItem(IDC_ITEM_LIST, this);
 	m_item_list.SetItemHeight(0, 24);
 
 	for (int i = 0; i < MAX_ITEM_COUNT; i++)
 	{
 		m_item_list.InsertString(i, p_item_name[i]);
+		m_item_list.SetItemData(i, price[i]);
 	}
 
 
@@ -101,3 +105,19 @@ HCURSOR CCoffeeShopDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CCoffeeShopDlg::OnLbnSelchangeItemList()
+{
+	int count = m_item_list.GetCount();
+	int total_price = 0;
+	for (int i = 0; i < count; i++)
+	{
+		if (m_item_list.GetCheck(i))
+		{
+			total_price += m_item_list.GetItemData(i);
+		}
+	}
+
+	SetDlgItemInt(IDC_TOTAL_PRICE_EDIT, total_price);
+}
