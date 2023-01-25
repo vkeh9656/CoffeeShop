@@ -26,7 +26,6 @@ CCoffeeShopDlg::CCoffeeShopDlg(CWnd* pParent /*=nullptr*/)
 void CCoffeeShopDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_COUNT_LIST, m_count_list);
 	DDX_Control(pDX, IDC_COUNT_SPIN, m_count_spin);
 }
 
@@ -35,6 +34,8 @@ BEGIN_MESSAGE_MAP(CCoffeeShopDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_LBN_SELCHANGE(IDC_ITEM_LIST, &CCoffeeShopDlg::OnLbnSelchangeItemList)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_COUNT_SPIN, &CCoffeeShopDlg::OnDeltaposCountSpin)
+//	ON_WM_DESTROY()
+ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -51,23 +52,32 @@ BOOL CCoffeeShopDlg::OnInitDialog()
 
 	wchar_t* p_item_name[MAX_ITEM_COUNT] =
 	{
-		L"아메리카노              1900원", L"카페라떼                 2500원",
-		L"카페모카                 2800원", L"카라멜마끼아또        3200원",
-		L"에스프레소              1800원", L"바닐라라떼              3500원",
-		L"카푸치노                 3300원", L"비엔나                    3500원",
+		L"아메리카노         1900원", L"카페라떼           2500원",
+		L"카페모카           2800원", L"카라멜마끼아또     3200원",
+		L"에스프레소         1800원", L"바닐라라떼         3500원",
+		L"카푸치노           3300원", L"비엔나             3500원",
 	};
 
 	int price[MAX_ITEM_COUNT] = { 1900,2500,2800,3200,1800,3500,3300,3500 };
 
-	m_item_list.SubclassDlgItem(IDC_ITEM_LIST, this);
-	m_item_list.SetItemHeight(0, 24);
-	m_count_list.SetItemHeight(0, 24);
+	
 
+	m_item_list.SubclassDlgItem(IDC_ITEM_LIST, this);
+
+	m_my_font.CreatePointFont(96, L"굴림체");
+	m_item_list.SetFont(&m_my_font);
+
+	m_item_list.SetItemHeight(0, 24);
+
+	ItemInfo* p;
 	for (int i = 0; i < MAX_ITEM_COUNT; i++)
 	{
 		m_item_list.InsertString(i, p_item_name[i]);
-		m_item_list.SetItemData(i, price[i]);
-		m_count_list.InsertString(i, L"0");
+		p = new ItemInfo;
+		p->price = price[i];
+		p->count = 0;
+
+		m_item_list.SetItemDataPtr(i, p);
 	}
 
 	m_count_spin.GetWindowRect(&m_spin_rect);
@@ -116,45 +126,34 @@ void CCoffeeShopDlg::CalcTotalPrice()
 {
 	int count = m_item_list.GetCount();
 	int total_price = 0;
-	CString str;
+	ItemInfo* p;
 
 	for (int i = 0; i < count; i++)
 	{
 		if (m_item_list.GetCheck(i))
 		{
-			m_count_list.GetText(i, str);
-			int item_count = _wtoi(str);
+			p = (ItemInfo*)m_item_list.GetItemDataPtr(i);
 
-			total_price += m_item_list.GetItemData(i) * item_count;
+			total_price += p->price * p->count;
 		}
 	}
 
 	SetDlgItemInt(IDC_TOTAL_PRICE_EDIT, total_price);
 }
 
-void CCoffeeShopDlg::ChangeText(CListBox* ap_list_box, int a_index, const wchar_t* ap_string)
-{
-	ap_list_box->DeleteString(a_index);
-	ap_list_box->InsertString(a_index, ap_string);
-	ap_list_box->SetCurSel(a_index);
-}
 
 void CCoffeeShopDlg::OnLbnSelchangeItemList()
 {
 	int index = m_item_list.GetCurSel();
-	
-	CString str;
-	m_count_list.GetText(index, str);
-
-	int item_count = _wtoi(str);	// L"0" -> 0  unicode to integer
+	ItemInfo* p = (ItemInfo*)m_item_list.GetItemDataPtr(index);
 
 	if (m_item_list.GetCheck(index)) {
-		if (item_count == 0) ChangeText(&m_count_list, index, L"1");
+		if (p->count == 0) p->count = 1;
 	} 
 	else {
-		if (item_count != 0) ChangeText(&m_count_list, index, L"0");		
+		if (p->count != 0) p->count = 0;
 	}
-	m_count_list.SetCurSel(index);
+	m_item_list.SetCurSel(index);
 	m_count_spin.SetWindowPos(NULL, m_spin_rect.left, m_spin_rect.top + index * 24, 0, 0, SWP_NOSIZE);
 
 	CalcTotalPrice();
@@ -167,22 +166,32 @@ void CCoffeeShopDlg::OnDeltaposCountSpin(NMHDR* pNMHDR, LRESULT* pResult)
 	
 	*pResult = 0;
 
-	int index = m_count_list.GetCurSel();
+	int index = m_item_list.GetCurSel();
 	if (LB_ERR != index && m_item_list.GetCheck(index))
 	{
-		CString str;
-		m_count_list.GetText(index, str);
-		int item_count = _wtoi(str);		// L"0" -> 0
-
+		ItemInfo* p = (ItemInfo*)m_item_list.GetItemDataPtr(index);
+		
 		if (pNMUpDown->iDelta > 0) {
-			if(item_count > 1) item_count--;
+			if (p->count > 1)p->count--;
 		}
 		else {
-			if(item_count < 100) item_count++;
+			if (p->count < 100)p->count++;
 		}
-		str.Format(L"%d", item_count);		// 1 -> L"1"
-		ChangeText(&m_count_list, index, str);
-
+		m_item_list.SetCurSel(index);
 		CalcTotalPrice();
 	}
+}
+
+void CCoffeeShopDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	int count = m_item_list.GetCount();
+	ItemInfo* p;
+	for (int i = 0; i < count; i++)
+	{
+		p = (ItemInfo*)m_item_list.GetItemDataPtr(i);
+		delete p;
+	}
+	m_item_list.ResetContent();
 }

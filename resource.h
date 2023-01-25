@@ -6,8 +6,6 @@
 #define IDR_MAINFRAME                   128
 #define IDC_ITEM_LIST                   1001
 #define IDC_TOTAL_PRICE_EDIT            1002
-#define IDC_COUNT_LIST                  1003
-#define IDC_SPIN2                       1005
 #define IDC_COUNT_SPIN                  1005
 
 // Next default values for new objects
